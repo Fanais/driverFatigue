@@ -48,13 +48,14 @@ EYE_AR_CONSEC_FRAMES = 30
 COUNTER = 0
 ALARM_ON = False
 
+WARNING_PLAYED = False
 warningsInPeriod = 0
 currPeriodLength = 0
 MAX_WARNINGS_THRESH = 3
-MAX_PERIOD_THRESH = 150
+MAX_PERIOD_THRESH = 30000
 
 # initialize ardunio connection
-serPort = "/dev/cu.usbmodem143201"
+serPort = "/dev/cu.usbmodem141101"
 baudRate = 9600
 ser = serial.Serial(serPort, baudRate)
 arduino.waitForArduino(ser)
@@ -127,26 +128,24 @@ while True:
             # then sound the alarm
             if COUNTER >= EYE_AR_CONSEC_FRAMES:
 
-                # start incrementing warning period timer
-                CURR_PERIOD_LENGTH += 1
-
                 # if the alarm is not on, turn it on
                 if not ALARM_ON:
                     ALARM_ON = True
                     warningsInPeriod += 1
-
-                    # check to see if this is the third warning
-                    if (warningsInPeriod >= MAX_WARNINGS_THRESH):
-                        # play audio warning
-                        t = Thread(target=assist.giveLocationWarning)
-                        t.deamon = True
-                        t.start()
                         
-                    else:
-                        # start a thread to have the alarm
-                        # sound played in the background
-                        t = Thread(target=sound_alarm,
-                                args=(alarmPath,))
+                    # start a thread to have the alarm
+                    # sound played in the background
+                    t = Thread(target=sound_alarm,
+                            args=(alarmPath,))
+                    t.deamon = True
+                    t.start()
+
+                    # check to see if this is the third warning and we've only triggered the alarm once
+                    if (warningsInPeriod >= MAX_WARNINGS_THRESH and not WARNING_PLAYED):
+                        
+                        # play audio warning
+                        WARNING_PLAYED = True
+                        t = Thread(target=assist.giveLocationWarning)
                         t.deamon = True
                         t.start()
 
@@ -169,8 +168,8 @@ while True:
                     cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 0, 255), 2)
 
                                     # draw an alarm on the frame
-        cv2.putText(frame, "CURRENT WARNINGS: {:.2f}".format(warningsInPeriod), (10, 30),
-                    cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 0, 255), 2)
+        cv2.putText(frame, "WARNING COUNT: {:.2f}".format(warningsInPeriod), (200, 230),
+                    cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 0, 255), 2)
 
     # show the frame
     cv2.imshow("Frame", frame)

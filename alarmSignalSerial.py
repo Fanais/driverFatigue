@@ -64,10 +64,10 @@ def sendAlarmSignal(sig, ser):
             pass
 
         dataRecvd = recvFromArduino(ser)
-        print("REC:  " + dataRecvd)
+        # print("REC:  " + dataRecvd)
         waitingForReply = False
 
-        print("===========")
+        # print("===========")
 
 
 # ======================================
